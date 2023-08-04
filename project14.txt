@@ -1,0 +1,14 @@
+import sm2
+
+# 生成密钥对
+private_key = sm2.generate_private_key()
+public_key = private_key.public_key
+
+# 加密明文
+plaintext = b"hello world"
+ciphertext = sm2.encrypt(plaintext, public_key)
+
+# 解密密文
+decrypted_text = sm2.decrypt(ciphertext, private_key)
+
+print(Decrypted_text)
