@@ -1,0 +1,24 @@
+import webbrowser
+import keyring
+
+# 登录网页
+webbrowser.open('https://www.example.com/login')
+
+# 获取用户名和密码
+username = input('请输入用户名：')
+password = input('请输入密码：')
+
+# 将用户名和密码存储到keyring中
+keyring.set_password('website', 'example.com', username, password)
+
+
+
+import webbrowser
+import pyautogui
+
+# 打开网页并自动填充表单
+webbrowser.open('https://www.example.com/login')
+pyautogui.typewrite('username')
+pyautogui.press('Tab')
+pyautogui.typewrite('password')
+pyautogui.press('Enter')
