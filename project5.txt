@@ -1,0 +1,75 @@
+package main
+
+import (
+    "crypto/sha256"
+    "encoding/hex"
+    "fmt"
+    "sort"
+)
+
+type MerkleTree struct {
+    trees [][]string
+}
+
+func NewMerkleTree(transactions []string) *MerkleTree {
+    tree := &MerkleTree{
+        trees: make([][]string, 1),
+    }
+    for _, transaction := range transactions {
+        tree.addTransaction(transaction)
+    }
+    return tree
+}
+
+func (tree *MerkleTree) addTransaction(transaction string) {
+    hash := sha256.New()
+    hash.Write([]byte(transaction))
+    digest := hex.EncodeToString(hash.Sum(nil))
+    tree.trees = append(tree.trees, digest)
+}
+
+func (tree *MerkleTree) getRoot() string {
+    if len(tree.trees) == 1 {
+        return tree.trees[0][0]
+    }
+    var sortedTxs [][]string
+    for _, tree := range tree.trees {
+        sortedTxs = append(sortedTxs, tree)
+    }
+    sort.Slice(sortedTxs, func(i, j int) bool {
+        return sortedTxs[i][0] < sortedTxs[j][0]
+    })
+    newTree := make([]string, len(sortedTxs[0]))
+    copy(newTree, sortedTxs[0])
+    for i := 1; i < len(sortedTxs); i++ {
+        j := 0
+        for j < len(newTree) && newTree[j] < sortedTxs[i][0] {
+            j++
+        }
+        newTree = append(newTree[:j], append([]string{sortedTxs[i][0]}, newTree[j:]...)...)
+    }
+    for i := 0; i < len(newTree)-1; i++ {
+        tree.addSubTree(newTree[i], newTree[i+1])
+    }
+    return newTree[len(newTree)-1]
+}
+
+func (tree *MerkleTree) addSubTree(left, right string) {
+    hash := sha256.New()
+    hash.Write([]byte(left + right))
+    digest := hex.EncodeToString(hash.Sum(nil))
+    tree.trees = append(tree.trees, []string{digest})
+}
+
+func main() {
+    transactions := []string{
+        "transaction-1",
+        "transaction-2",
+        "transaction-3",
+        "transaction-4",
+        "transaction-5",
+    }
+    tree := NewMerkleTree(transactions)
+    root := tree.getRoot()
+    fmt.Println("Root:", root)
+}
