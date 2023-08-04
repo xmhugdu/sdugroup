@@ -1,0 +1,28 @@
+import hashlib
+
+def sm3(msg):
+    h = [0x73, 0x8d, 0x81, 0x4d, 0x3e, 0x4f, 0x5c, 0x1a,
+         0x6b, 0x98, 0x3d, 0x0c, 0x2d, 0x8c, 0x7a, 0x1f,
+         0x2e, 0x3e, 0x4d, 0x7a, 0x8f, 0x2e, 0x51, 0x7a,
+         0x9b, 0x4c, 0x8e, 0x8a, 0xa7, 0x4a, 0x4a, 0x56]
+
+    msg = bytearray(msg)
+
+    for i in range(0, len(msg), 64):
+        w = []
+        for j in range(16):
+            w.append(msg[i+j:i+j+4].to_bytes(4, byteorder='big') if j < 12 else msg[i+j-12:-4].to_bytes(4, byteorder='big'))
+        for j in range(18):
+            t = w[j]
+            for k in range(64):
+                t = ((t << 1) + (t >> 7)) & 0xff
+            w[j] = bytes([t ^ h[j] & ~((h[(j+1)%18] ^ h[(j+19)%18]) & ((h[(j+1)%18] & h[(j+19)%18]) | (h[(j+1)%18] & ~h[(j+19)%18]))))])
+        t = []
+        for j in range(16):
+            t.append(w[j] if j < 12 else (w[j] << (8*(12-j)))
+        h = bytearray([a ^ b for a, b in zip(h, t)])
+    return hashlib.sm3(bytes(h)).hexdigest()
+
+已知前缀 = b'prefix'
+目标后缀 = b'suffix'
+破解消息 = known_prefix + target_suffix
