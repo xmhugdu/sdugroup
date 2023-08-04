@@ -1,0 +1,19 @@
+import struct
+
+def sm3(msg):
+    msg = bytearray(msg, encoding='utf-8')
+    h = bytearray(32)
+    h[0] = 0x01
+    for i in range(64):
+        bin_i = struct.pack('<I', msg[i * 4 + 3]) + struct.pack('<I', msg[i * 4 + 2]) + struct.pack('<I', msg[i * 4 + 1]) + struct.pack('<I', msg[i * 4])
+        bin_i_128 = bin_i + struct.pack('<Q', msg[(i * 4 + 4) * 4 + 3] << 56 | struct.pack('<Q', msg[(i * 4 + 4) * 4 + 2] << 48 | struct.pack('<Q', msg[(i * 4 + 4) * 4 + 1] << 40 | struct.pack('<Q', msg[(i * 4 + 4) * 4] << 32)) & 0xffffffffffffffff)
+        s = (7, 18, 23, 17, 1, 17, 18, 23, 21, 1, 7, 21, 23, 18, 17, 23, 17, 19, 7, 19, 23, 18)
+        for j in range(16):
+            h[j] ^= s[j]
+        for j in range(16):
+            h[j] ^= h[(j + s[j]) % 16]
+        for j in range(16):
+            h[j] ^= bin_i_128[j * 8 : (j + 1) * 8]
+        for j in range(16):
+            h[j] = (h[j] << 5) & 0xff
+    return ''.join(format(x, 'x') for x in h)
